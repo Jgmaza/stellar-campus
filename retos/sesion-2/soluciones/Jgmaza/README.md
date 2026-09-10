@@ -1,57 +1,77 @@
-# Reto 3 — Consulta el estado del Pool
+# Retos 3, 4 y 5 — Jgmaza
 
-Script en TypeScript que lee el contrato del **Pool Comunitario** en testnet
-y muestra en consola el estado de la campaña.
+Soluciones de la Sesión 2 del [Stellar Campus](https://github.com/QuillaBlocks/stellar-campus)
+contra el Pool Comunitario en testnet.
 
-**Autor:** [Jgmaza](https://github.com/Jgmaza)  
-**Contrato:** `CDF5IJWNCGNPBWTFCW3PWRXKPWZTPKQSHHRRYTSSCXKQ37U2CPDONSZ2`
+**Contrato del Pool:** `CDF5IJWNCGNPBWTFCW3PWRXKPWZTPKQSHHRRYTSSCXKQ37U2CPDONSZ2`
 
-## Qué hace
+## Cómo correr
 
-Llama (solo lectura, sin firmar) a:
-
-- `name()` — nombre de la campaña
-- `goal()` — meta en stroops
-- `get_status()` — recaudado, meta, %, contribuyentes, deadline y reloj del ledger
-
-Convierte stroops → XLM, basis points → porcentaje, y el deadline → días restantes.
-
-## Cómo correrlo
-
-Necesitas Node 18+.
+Node 18+.
 
 ```bash
 npm install
-npm run status
+npm run status        # Reto 3
+npm run contributors  # Reto 4
+npm run contribute    # Reto 5 (opcional: SENDER_SECRET en .env)
 ```
 
-O directamente:
+No subas un `.env` con claves al PR.
+
+---
+
+## Reto 3 — Estado del Pool
+
+`pool-status.ts` llama `name()`, `goal()` y `get_status()` por simulación (sin firmar).
+
+Muestra campaña, recaudado/meta, %, contribuyentes y días restantes.
+
+---
+
+## Reto 4 — Lista contribuyentes (eventos)
+
+`list-contributors.ts` lee eventos `contribute` con `getEvents`, pagina con `cursor`
+y ordena por fecha.
+
+Trampa del reto: si `startLedger` queda fuera de la retención del RPC, la
+respuesta viene **vacía y sin error**. El script ancla la ventana en
+`oldestLedger` del RPC (~7 días en testnet público).
+
+---
+
+## Reto 5 — Contribute desde código
+
+`contribute.ts` arma la invocación, la simula, firma con una clave de testnet,
+envía y espera confirmación.
+
+El Pool oficial estaba en estado **Withdrawn** (meta alcanzada y fondos
+retirados), así que `contribute` ahí falla con `NotActive`. El script detecta
+eso, despliega una campaña de prueba con el **mismo Wasm** del Pool, la
+inicializa y aporta 1 XLM.
+
+### Hash de la contribución (on-chain)
+
+| Campo | Valor |
+| --- | --- |
+| Contrato (prueba) | `CC77QRWUO7VP2I2TTQWBV6P4L6VAXSQWLZS4EAQWTBEERYXMQOZYKT3V` |
+| Hash | `f4ac3ebc578061c44001b9d6168392b1d802a5cc0114ba210872f087c3160747` |
+| Explorador | [ver tx](https://stellar.expert/explorer/testnet/tx/f4ac3ebc578061c44001b9d6168392b1d802a5cc0114ba210872f087c3160747) |
+| initialize | [tx](https://stellar.expert/explorer/testnet/tx/7c8e6e374391557d11988fea5d5b5b550148427637a3b6397d8233ce7f3f8d4d) |
+
+Para usar tu propia cuenta:
 
 ```bash
-npx tsx pool-status.ts
+cp .env.example .env   # pega SENDER_SECRET=S...
+npm run contribute
 ```
 
-No hace falta `.env` ni wallet: es solo simulación de lectura vía RPC.
+---
 
-## Ejemplo de salida
+## Archivos
 
-```
-Campaña:          Stellar Campus CUC
-Estado:           Retirada (admin ya sacó fondos)
-Recaudado:        310 / 300 XLM
-Meta (goal()):    300 XLM
-Avance:           100.00%
-Contribuyentes:   6
-Días restantes:   1.7 días
-```
-
-(Los números cambian según el estado actual del contrato en testnet.)
-
-## Cómo funciona (en corto)
-
-1. Arma una transacción con `Contract.call("get_status")` (y lo mismo para `name` / `goal`).
-2. La **simula** con el RPC de Soroban (`simulateTransaction`).
-3. Decodifica el valor de retorno con `scValToNative`.
-4. Formatea e imprime.
-
-Por eso no pide clave secreta ni fondos: nunca se envía la tx a la red.
+| Archivo | Reto |
+| --- | --- |
+| `pool-status.ts` | 3 |
+| `list-contributors.ts` | 4 |
+| `contribute.ts` | 5 |
+| `package.json` | deps + scripts |

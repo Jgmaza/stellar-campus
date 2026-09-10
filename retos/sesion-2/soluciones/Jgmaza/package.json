@@ -5,14 +5,17 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "status": "tsx pool-status.ts"
+    "status": "tsx pool-status.ts",
+    "contributors": "tsx list-contributors.ts",
+    "contribute": "tsx contribute.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@stellar/stellar-sdk": "^17.0.1"
+    "@stellar/stellar-sdk": "^17.0.1",
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
     "@types/node": "^22.20.2",
